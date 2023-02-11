@@ -28,7 +28,7 @@
 #pragma once
 #include "Framework.h"
 
-class Tutorial14 : public Tutorial
+class RealRayTracing : public Tutorial
 {
 public:
     struct AccelerationStructureBuffers

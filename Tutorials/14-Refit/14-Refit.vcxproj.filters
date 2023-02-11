@@ -6,10 +6,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="14-Refit.cpp" />
+    <ClCompile Include="RealRayTracing.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="14-Refit.h" />
+    <ClInclude Include="RealRayTracing.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Data\14-Shaders.hlsl">

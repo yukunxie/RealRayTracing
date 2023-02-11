@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***************************************************************************/
-#include "14-Refit.h"
+#include "RealRayTracing.h"
 #include <sstream>
 
 static dxc::DxcDllSupport gDxcDllHelper;
@@ -157,7 +157,7 @@ uint64_t submitCommandList(ID3D12GraphicsCommandList4Ptr pCmdList, ID3D12Command
     return fenceValue;
 }
 
-void Tutorial14::initDXR(HWND winHandle, uint32_t winWidth, uint32_t winHeight)
+void RealRayTracing::initDXR(HWND winHandle, uint32_t winWidth, uint32_t winHeight)
 {
     mHwnd = winHandle;
     mSwapChainSize = uvec2(winWidth, winHeight);
@@ -196,7 +196,7 @@ void Tutorial14::initDXR(HWND winHandle, uint32_t winWidth, uint32_t winHeight)
     mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
-uint32_t Tutorial14::beginFrame()
+uint32_t RealRayTracing::beginFrame()
 {
     // Bind the descriptor heaps
     ID3D12DescriptorHeap* heaps[] = { mpSrvUavHeap };
@@ -204,7 +204,7 @@ uint32_t Tutorial14::beginFrame()
     return mpSwapChain->GetCurrentBackBufferIndex();
 }
 
-void Tutorial14::endFrame(uint32_t rtvIndex)
+void RealRayTracing::endFrame(uint32_t rtvIndex)
 {
     resourceBarrier(mpCmdList, mFrameObjects[rtvIndex].pSwapChainBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
     mFenceValue = submitCommandList(mpCmdList, mpCmdQueue, mpFence, mFenceValue);
@@ -302,7 +302,7 @@ ID3D12ResourcePtr createPlaneVB(ID3D12Device5Ptr pDevice)
     return pBuffer;
 }
 
-Tutorial14::AccelerationStructureBuffers createBottomLevelAS(ID3D12Device5Ptr pDevice, ID3D12GraphicsCommandList4Ptr pCmdList, ID3D12ResourcePtr pVB[], const uint32_t vertexCount[], uint32_t geometryCount)
+RealRayTracing::AccelerationStructureBuffers createBottomLevelAS(ID3D12Device5Ptr pDevice, ID3D12GraphicsCommandList4Ptr pCmdList, ID3D12ResourcePtr pVB[], const uint32_t vertexCount[], uint32_t geometryCount)
 {
     std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geomDesc;
     geomDesc.resize(geometryCount);
@@ -329,7 +329,7 @@ Tutorial14::AccelerationStructureBuffers createBottomLevelAS(ID3D12Device5Ptr pD
     pDevice->GetRaytracingAccelerationStructurePrebuildInfo(&inputs, &info);
 
     // Create the buffers. They need to support UAV, and since we are going to immediately use them, we create them with an unordered-access state
-    Tutorial14::AccelerationStructureBuffers buffers;
+    RealRayTracing::AccelerationStructureBuffers buffers;
     buffers.pScratch = createBuffer(pDevice, info.ScratchDataSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, kDefaultHeapProps);
     buffers.pResult = createBuffer(pDevice, info.ResultDataMaxSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, kDefaultHeapProps);
 
@@ -350,7 +350,7 @@ Tutorial14::AccelerationStructureBuffers createBottomLevelAS(ID3D12Device5Ptr pD
     return buffers;
 }
 
-void buildTopLevelAS(ID3D12Device5Ptr pDevice, ID3D12GraphicsCommandList4Ptr pCmdList, ID3D12ResourcePtr pBottomLevelAS[2], uint64_t& tlasSize, float rotation, bool update, Tutorial14::AccelerationStructureBuffers& buffers)
+void buildTopLevelAS(ID3D12Device5Ptr pDevice, ID3D12GraphicsCommandList4Ptr pCmdList, ID3D12ResourcePtr pBottomLevelAS[2], uint64_t& tlasSize, float rotation, bool update, RealRayTracing::AccelerationStructureBuffers& buffers)
 {
     // First, get the size of the TLAS buffers and create them
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs = {};
@@ -437,7 +437,7 @@ void buildTopLevelAS(ID3D12Device5Ptr pDevice, ID3D12GraphicsCommandList4Ptr pCm
     pCmdList->ResourceBarrier(1, &uavBarrier);
 }
 
-void Tutorial14::createAccelerationStructures()
+void RealRayTracing::createAccelerationStructures()
 {
     mpVertexBuffer[0] = createTriangleVB(mpDevice);
     mpVertexBuffer[1] = createPlaneVB(mpDevice);
@@ -749,7 +749,7 @@ struct PipelineConfig
     D3D12_STATE_SUBOBJECT subobject = {};
 };
 
-void Tutorial14::createRtPipelineState()
+void RealRayTracing::createRtPipelineState()
 {
     // Need 16 subobjects:
     //  1 for DXIL library    
@@ -845,7 +845,7 @@ void Tutorial14::createRtPipelineState()
 //////////////////////////////////////////////////////////////////////////
 // Tutorial 05
 //////////////////////////////////////////////////////////////////////////
-void Tutorial14::createShaderTable()
+void RealRayTracing::createShaderTable()
 {
     /** The shader-table layout is as follows:
         Entry 0 - Ray-gen program
@@ -934,7 +934,7 @@ void Tutorial14::createShaderTable()
 //////////////////////////////////////////////////////////////////////////
 // Tutorial 06
 //////////////////////////////////////////////////////////////////////////
-void Tutorial14::createShaderResources()
+void RealRayTracing::createShaderResources()
 {
     // Create the output resource. The dimensions and format should match the swap-chain
     D3D12_RESOURCE_DESC resDesc = {};
@@ -970,7 +970,7 @@ void Tutorial14::createShaderResources()
 //////////////////////////////////////////////////////////////////////////
 // Tutorial 10
 //////////////////////////////////////////////////////////////////////////
-void Tutorial14::createConstantBuffers()
+void RealRayTracing::createConstantBuffers()
 {
     // The shader declares each CB with 3 float3. However, due to HLSL packing rules, we create the CB with vec4 (each float3 needs to start on a 16-byte boundary)
     vec4 bufferData[] = {
@@ -1004,7 +1004,7 @@ void Tutorial14::createConstantBuffers()
 //////////////////////////////////////////////////////////////////////////
 // Callbacks
 //////////////////////////////////////////////////////////////////////////
-void Tutorial14::onLoad(HWND winHandle, uint32_t winWidth, uint32_t winHeight)
+void RealRayTracing::onLoad(HWND winHandle, uint32_t winWidth, uint32_t winHeight)
 {
     initDXR(winHandle, winWidth, winHeight);        // Tutorial 02
     createAccelerationStructures();                 // Tutorial 03
@@ -1014,7 +1014,7 @@ void Tutorial14::onLoad(HWND winHandle, uint32_t winWidth, uint32_t winHeight)
     createShaderTable();                            // Tutorial 05
 }
 
-void Tutorial14::onFrameRender()
+void RealRayTracing::onFrameRender()
 {
     uint32_t rtvIndex = beginFrame();
 
@@ -1060,7 +1060,7 @@ void Tutorial14::onFrameRender()
     endFrame(rtvIndex);
 }
 
-void Tutorial14::onShutdown()
+void RealRayTracing::onShutdown()
 {
     // Wait for the command queue to finish execution
     mFenceValue++;
@@ -1071,5 +1071,5 @@ void Tutorial14::onShutdown()
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
-    Framework::run(Tutorial14(), "Tutorial 14 - Refit");
+    Framework::run(RealRayTracing(), "Tutorial 14 - Refit");
 }
